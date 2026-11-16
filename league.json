@@ -1,0 +1,21 @@
+{
+  "source": "User-supplied Kaggle 2025-26 player season averages CSV",
+  "season": "2025-26",
+  "kind": "historical_per_game_averages",
+  "player_count": 582,
+  "generated_at": "2026-11-16T02:03:05.409312+00:00",
+  "scoring": {
+    "FGM": 2,
+    "FGA": -1,
+    "FTM": 1,
+    "FTA": -1,
+    "3PM": 1,
+    "REB": 1,
+    "AST": 2,
+    "STL": 4,
+    "BLK": 4,
+    "TO": -2,
+    "PTS": 1
+  },
+  "note": "Only the supplied CSV provides basketball statistics. Fantasy points and season total estimates use rounded per-game averages; there are no future forecasts, per-game records, play-by-play, positions, injuries, schedules, ADP or matchups."
+}
