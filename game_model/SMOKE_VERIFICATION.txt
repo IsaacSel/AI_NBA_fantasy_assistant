@@ -1,0 +1,1 @@
+Original 3-layer model trained through forward, loss, backward and checkpoint save on a tiny Kaggle subset (64 training games; 16 validation games) on 2026-11-20. NOT a full-trained or performance-validated predictor. No smoke weights are included. See README.

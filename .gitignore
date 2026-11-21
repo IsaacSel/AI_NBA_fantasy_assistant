@@ -1,0 +1,32 @@
+# Local Python and OS files
+.venv/
+__pycache__/
+*.pyc
+.DS_Store
+.vscode/
+.idea/
+
+# Private user notes and drafts
+data/user/
+
+# Large Kaggle-derived datasets and generated binary model files:
+# The ZIP distribution includes these explicitly. Check third-party rights
+# before deciding to commit or publicly redistribute them in a Git repository.
+data/game_logs/
+data/seasons/
+data/app/
+data/model/
+data/player_positions_kaggle.csv
+game_model/data/
+game_model/checkpoints/
+game_model/output/
+
+# Frontend build files
+web/node_modules/
+web/.next/
+web/out/
+web/*.tsbuildinfo
+web/next-env.d.ts
+web/.env*
+
+*.log

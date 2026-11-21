@@ -1,0 +1,72 @@
+{
+  "PG": {
+    "name": "Point Guard",
+    "starters": 0,
+    "maximum": null
+  },
+  "SG": {
+    "name": "Shooting Guard",
+    "starters": 0,
+    "maximum": null
+  },
+  "SF": {
+    "name": "Small Forward",
+    "starters": 0,
+    "maximum": null
+  },
+  "PF": {
+    "name": "Power Forward",
+    "starters": 0,
+    "maximum": null
+  },
+  "C": {
+    "name": "Center",
+    "starters": 1,
+    "maximum": 4
+  },
+  "G": {
+    "name": "Guard",
+    "starters": 3,
+    "maximum": null
+  },
+  "F": {
+    "name": "Forward",
+    "starters": 3,
+    "maximum": null
+  },
+  "SG/SF": {
+    "name": "Shooting Guard/Small Forward",
+    "starters": 0,
+    "maximum": null
+  },
+  "G/F": {
+    "name": "Guard/Forward",
+    "starters": 0,
+    "maximum": null
+  },
+  "PF/C": {
+    "name": "Power Forward/Center",
+    "starters": 0,
+    "maximum": null
+  },
+  "F/C": {
+    "name": "Forward/Center",
+    "starters": 0,
+    "maximum": null
+  },
+  "UTIL": {
+    "name": "Util",
+    "starters": 3,
+    "maximum": null
+  },
+  "BE": {
+    "name": "Bench",
+    "starters": 3,
+    "maximum": null
+  },
+  "IR": {
+    "name": "Injured Reserve",
+    "starters": 1,
+    "maximum": null
+  }
+}

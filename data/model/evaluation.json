@@ -1,0 +1,21 @@
+{
+  "model": "HistGradientBoostingRegressor",
+  "target": "next-game fantasy points using league/scoring-system.json",
+  "training_seasons": [
+    "2018-19",
+    "2019-20",
+    "2020-21",
+    "2021-22",
+    "2022-23",
+    "2023-24",
+    "2024-25"
+  ],
+  "test_season": "2025-26",
+  "training_games": 167782,
+  "test_games": 26134,
+  "model_mae": 9.791,
+  "baseline_last10_mae": 10.066,
+  "model_rmse": 12.5,
+  "coverage_note": "Only players with 5+ earlier games evaluated; features use only games before prediction date.",
+  "projection_note": "Neutral-site/unknown-opponent next-game estimate, not a guaranteed 2026-27 season projection."
+}

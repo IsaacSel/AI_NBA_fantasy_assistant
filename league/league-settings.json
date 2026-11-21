@@ -1,0 +1,97 @@
+{
+  "_source": "Original project league configuration; locally retained as editable scoring and roster rules",
+  "name": "Saint Pablo's Basketball League",
+  "teams": 10,
+  "scoring_type": "Head to Head Points",
+  "roster_size": 13,
+  "starters": 10,
+  "bench": 3,
+  "ir_slots": 1,
+  "position_maximums": {
+    "C": 4
+  },
+  "lineup_changes": "daily",
+  "acquisitions_per_7_day_matchup": 7,
+  "season_acquisition_limit": null,
+  "waiver_period_days": 1,
+  "trade_deadline": "2027-02-19",
+  "regular_season_matchups": 19,
+  "playoff_teams": 4,
+  "weeks_per_playoff_round": 2,
+  "playoff_rounds": 2,
+  "_matchup_periods_note": "Approximate matchup grouping carried over from the original configuration; verify against your own league calendar before using schedule-dependent features.",
+  "matchup_periods": [
+    [
+      1,
+      2
+    ],
+    [
+      3
+    ],
+    [
+      4
+    ],
+    [
+      5
+    ],
+    [
+      6
+    ],
+    [
+      7
+    ],
+    [
+      8
+    ],
+    [
+      9
+    ],
+    [
+      10
+    ],
+    [
+      11
+    ],
+    [
+      12
+    ],
+    [
+      13
+    ],
+    [
+      14
+    ],
+    [
+      15
+    ],
+    [
+      16
+    ],
+    [
+      17
+    ],
+    [
+      18,
+      19
+    ],
+    [
+      20
+    ],
+    [
+      21
+    ],
+    [
+      22,
+      23
+    ],
+    [
+      24,
+      25
+    ]
+  ],
+  "_teams_note": "Ten teams and draft slot 8 retained as original project defaults; change for your own league.",
+  "draft": {
+    "type": "snake",
+    "my_slot": 8
+  }
+}

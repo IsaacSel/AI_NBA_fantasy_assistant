@@ -1,0 +1,54 @@
+{
+  "data_source": "Kaggle dataset eoinamoore/historical-nba-data-and-player-box-scores, user CSV exports",
+  "source_files": {
+    "game_logs": [
+      "nba_player_game_logs_2018_19.csv",
+      "nba_player_game_logs_2019_20.csv",
+      "nba_player_game_logs_2020_21.csv",
+      "nba_player_game_logs_2021_22.csv",
+      "nba_player_game_logs_2022_23.csv",
+      "nba_player_game_logs_2023_24.csv",
+      "nba_player_game_logs_2024_25.csv",
+      "nba_player_game_logs_2025_26.csv"
+    ],
+    "season_averages": [
+      "nba_player_averages_2018_19.csv",
+      "nba_player_averages_2019_20.csv",
+      "nba_player_averages_2020_21.csv",
+      "nba_player_averages_2021_22.csv",
+      "nba_player_averages_2022_23.csv",
+      "nba_player_averages_2023_24.csv",
+      "nba_player_averages_2024_25.csv",
+      "nba_player_averages_2025_26.csv"
+    ],
+    "positions": "data/player_positions_kaggle.csv"
+  },
+  "coverage": {
+    "seasons": "2018-19 through 2025-26",
+    "player_games": 200030,
+    "player_seasons": 4456,
+    "current_players": 582,
+    "positions_entries": 6820,
+    "team_games": 18896
+  },
+  "active_app_prediction_model": "PREVIOUS smaller Kaggle-trained PyTorch player-sequence Transformer, 2 layers; GBDT comparison",
+  "original_game_model": "Preserved original three-layer, team-aware PyTorch GameModel, verified and smoke-trained; not fully retrained in this artifact",
+  "original_architecture_training_checkpoint_included": false,
+  "missing_inputs": [
+    "historical starter flags",
+    "possession/play-by-play events",
+    "historical preseason",
+    "college rookie data",
+    "future schedule",
+    "future injury records",
+    "verified 2026-27 rosters",
+    "platform-specific PG/SG/SF/PF eligibility"
+  ],
+  "notes": "Original model receives neutral placeholders for unavailable starter and possession features; no synthetic observations or future games are created. Forecasts in web remain from previous trained smaller network. Unused historical collection and possession-simulation modules have been removed.",
+  "code_similarity_line_retention_approx": {
+    "original_web_source": "98.2%",
+    "original_game_model_run_py": "99.3%"
+  },
+  "tests": "14 Python regression tests passed; TypeScript 34 source files parsed with no errors; original model smoke training passed but weights excluded.",
+  "removed_legacy_code": "Unused possession/forecast modules, provider-specific comparison UI, old documentation, and old league settings PDF."
+}
