@@ -1,22 +1,87 @@
-# Fantasy Basketball — Original App + Original Game-Level Transformer + Kaggle Data
+# Fantasy Hoops Lab
 
-This edition **keeps the original web application and the original sophisticated PyTorch `GameModel` implementation** (`game_model/run.py`) and replaces the original data collection path with the NBA player-game, season-average, and player-position CSVs supplied by the user.
+Models, tools, and a web app for **Saint Pablo's Basketball League**: 10 teams, head-to-head points scoring, daily lineups, and a draft-focused view of the 2026–27 season. The project uses **locally stored Kaggle basketball data**; it does not collect live scores, schedules, injuries, or rosters.
 
-## What is actually working now
+The question everything here works toward answering is:
 
-| Part | Status |
-|---|---|
-| Original draft, live draft, rankings, profiles, streaming UI | Retained, with modernized Kaggle-only data source |
-| Player histories (2018–19 through 2025–26) | 200,030 individual player-games; 4,456 player-season rows |
-| Verified broad G/F/C positions | All 582 current draft-pool players; not fantasy PG/SG/SF/PF eligibility |
-| Immediate draft rankings and predictions | **Existing trained smaller** PyTorch player-sequence Transformer, plus historical baseline; gradient boosting retained as comparison |
-| **Original 3-layer, two-team Transformer** | Original architecture preserved at `game_model/run.py`; real Kaggle-to-model export, full training CLI, tested forward pass, smoke training, and hypothetical matchup inference entry point |
-| Original **full-training checkpoint** | **Not shipped.** Full fitting and fair validation of the large original model are computationally intensive. A smoke checkpoint is not a trained forecasting model. |
-| Play-by-play events, historical starts, rookie college inputs, preseason, injuries, confirmed 2026–27 schedule | **Not supplied.** No invented data. Some original input features are neutral; some legacy modules remain for reference but are unavailable. |
+> **How many fantasy points might each player score in his next game, and what does that mean for rankings, drafts, and longer-term value?**
 
-**Important:** The app's current predictions still come from the previously trained 2-layer player-sequence Transformer (and historical baseline), **not the original 3-layer team-aware architecture** until you fully train the original model. Do not describe its accuracy as validated using this new architecture. A trainable architecture is not the same as a trained checkpoint.
+The project has two complementary approaches. A **trained player-sequence Transformer** forecasts next-game fantasy points from recent performances and powers the current app's ML estimates. Alongside it, the **original advanced game-level foundation model** is preserved: a three-layer, team-aware PyTorch Transformer designed to see both teams in a game and predict each participating player's minutes and full statistical line. That advanced architecture is **data-connected and training-ready, but not fully trained or validated in this release**.
 
-## Start the web app
+## Contents
+
+- [The process at a glance](#the-process-at-a-glance)
+- [Repository map](#repository-map)
+- [Quick start](#quick-start)
+- [League scoring](#league-scoring)
+- [Principles](#principles)
+- [Results so far](#results-so-far)
+- [Current limitations](#current-limitations)
+- [Further reading](#further-reading)
+
+## The process at a glance
+
+1. **Extract historical data from Kaggle.** The notebooks in `kaggle_extract/` document how the player game logs, season averages, and broad player positions were exported from [NBA Dataset: Box Scores and Stats](https://www.kaggle.com/datasets/eoinamoore/historical-nba-data-and-player-box-scores). The required CSV files are included in this ZIP.
+2. **Build the local app datasets.** `app_data/build_app_data.py` calculates season history, fantasy scoring, broad-position eligibility, and initial player rankings. `app_data/enrich_game_data.py` adds individual-game histories, performance trends, consistency measures, and predictions from previously trained comparison models.
+3. **Prepare games for the original architecture.** `game_model/export_data.py` pairs both teams by game ID and creates `game_model/data/` in the structure expected by the original multi-stat Transformer. Unavailable possession, starter, college, and preseason inputs remain explicitly empty or neutral; no substitute observations are invented.
+4. **Train and evaluate machine-learning models.** The shipped smaller PyTorch Transformer reads up to 12 prior games per player. A gradient-boosting regressor provides a comparison. Both have saved evaluations on the held-out **2025–26** season. The advanced, team-aware Transformer can be verified and trained separately.
+5. **Use the app.** Browse player rankings, profiles, eight-season history, individual game logs, model accuracy, mock drafts, and a live draft board. Future-game streaming projections remain unavailable because no confirmed future schedule is provided.
+
+**Data included:** eight seasons (**2018–19 through 2025–26**), **200,030** player-game records, **4,456** player-season rows, and **6,820** player identity/position entries. All **582** players in the 2025–26 draft pool have a broad G/F/C classification. Data coverage is historical; the presence of 2026–27 league settings does not mean the project has verified 2026–27 games or rosters.
+
+The original model design and input contracts are explained in [`game_model/README.md`](game_model/README.md).
+
+## Repository map
+
+```text
+fantasy-basketball/
+├── game_model/           Original advanced team-aware PyTorch model
+│   ├── run.py            Verify, train, evaluate, and checkpoint the original GameModel
+│   ├── export_data.py    Kaggle CSVs -> original model input bundle
+│   ├── predict_matchup.py
+│   ├── data/             Prepared historical team/game tensors and metadata
+│   └── README.md
+├── model/                Trained comparison approaches
+│   ├── train_transformer.py   2-layer player-sequence PyTorch Transformer
+│   ├── train_game_logs.py     Gradient-boosting model
+│   └── predict_transformer.py
+├── kaggle_extract/       Kaggle notebooks for averages, game logs, positions
+├── app_data/             Build and enrich the site's JSON data
+├── web/                  Next.js application (rankings, drafts, profiles, history)
+├── league/               Editable scoring, lineup, and draft settings
+├── data/
+│   ├── game_logs/        Eight game-by-game CSVs
+│   ├── seasons/          Eight player-season average CSVs
+│   ├── player_positions_kaggle.csv
+│   ├── model/            Trained smaller-model artifacts and evaluation files
+│   └── app/              Generated JSON consumed by the website
+├── docs/                 Data provenance and limitations
+├── tests/                Data, model, and architecture regression tests
+├── refresh_data.sh      Rebuild app and advanced-model inputs from local CSVs
+├── setup_history.sh     Re-export local advanced-model inputs (not a downloader)
+├── requirements.txt
+└── README.md
+```
+
+| Folder or file | Details |
+| --- | --- |
+| `game_model/run.py` | Original 64-dimensional player embeddings, 2-layer form encoder, 3-layer / 4-head team-aware Transformer, minutes and 13-stat output heads, training and evaluation workflow |
+| `game_model/export_data.py` | Loads both sides of historic games from local CSVs, builds the original model's self-contained input bundle, and records missing feature availability |
+| `model/train_transformer.py` | Trains the current 2-layer / 4-head, 32-wide player-history network from prior-game sequences; saves a `.pt` checkpoint and predictions |
+| `model/train_game_logs.py` | Builds the gradient-boosting comparison model and evaluation/prediction files |
+| `kaggle_extract/` | `2018-2026-avg-data.ipynb`, `game-by-game.ipynb`, and `positions.ipynb`, retained for reproducible extraction |
+| `app_data/` | Produces `data/app/players.json`, `profiles.json`, `history.json`, seasonal game-log JSON, and evaluation summaries |
+| `web/` | Next.js app with `/` rankings, `/players/[id]`, `/history`, `/model`, `/draft`, `/live`, and `/streaming` |
+| `league/` | `scoring-system.json`, `league-settings.json`, `positions.json`, and scoring notes |
+| `data/` | Source CSVs and pre-generated model/app outputs so the downloaded ZIP is usable without rerunning Kaggle notebooks |
+
+**For GitHub:** the ZIP includes the data and trained comparison model, but the default `.gitignore` excludes large `data/` directories, checkpoints, and generated model inputs. A fresh clone **will not necessarily contain the data** unless you explicitly distribute it under appropriate permissions. The repository root is the working directory for all Python commands below.
+
+## Quick start
+
+### 1. Run the website with bundled data
+
+Install [Node.js](https://nodejs.org/) and open a terminal in the extracted project root:
 
 ```bash
 cd web
@@ -24,20 +89,25 @@ npm ci
 npm run dev
 ```
 
-Open http://localhost:3000. The JSON inputs and the previously trained Kaggle model outputs are already included; no internet API call or data collection is needed to view the application.
+Open **http://localhost:3000**. The saved player files and trained smaller-model predictions are included, so **Python and Kaggle access are not required merely to browse the app**.
 
-## Rebuild all Kaggle data
+### 2. Rebuild the data from your CSVs
 
-Set up Python from the repository root:
+From the repository root, with Python installed:
 
 ```bash
-python -m pip install -r requirements.txt
+python -m venv .venv
+# Activate .venv for your shell, then:
+python -m pip install -r requirements.txt -r game_model/requirements.txt
+
 python -m app_data.build_app_data
 python -m app_data.enrich_game_data
 python game_model/export_data.py
 ```
 
-This regenerates `data/app/` for the website and `game_model/data/` for the **ORIGINAL team-aware architecture**. Files are read only from `data/seasons`, `data/game_logs`, and `data/player_positions_kaggle.csv`. No remote scraping or third-party sports API calls are used. Python model prediction files in `data/model/` are already provided. Refit the smaller comparison model only if desired:
+On a Bash-compatible system, `./refresh_data.sh` performs the last three commands. Despite its name, **`setup_history.sh` does not download history**: it only regenerates `game_model/data/` from local CSV files.
+
+To retrain the two smaller comparison models, optionally run:
 
 ```bash
 python -m model.train_game_logs
@@ -45,65 +115,127 @@ python -m model.train_transformer
 python -m app_data.enrich_game_data
 ```
 
-## Train the ORIGINAL three-layer team-aware PyTorch Transformer
+Retraining changes the saved predictions and evaluation artifacts; it is **not** needed for the included precomputed predictions.
 
-The original `GameModel` remains: a **2-layer form encoder**, per-player **64-dimensional embeddings**, a **3-layer, four-head Transformer over both teams**, team context tokens, minutes-share head, multi-stat per-minute output heads, and auxiliary forecast heads. It is fundamentally different from the smaller already-trained model.
+### 3. Verify and train the original advanced Transformer
 
 ```bash
-# Fast no-training architecture and data compatibility verification:
+# Fast architecture and Kaggle-data compatibility check
 python game_model/run.py --verify-only
 
-# One-epoch MINI smoke check for forward + backward + checkpoint:
+# Tiny end-to-end smoke training; NOT a production model
 python game_model/run.py --smoke --holdouts
 
-# Actual full model training, including held-out 2025–26 evaluation:
-# Prefer CUDA or Apple Silicon acceleration; full training may take substantial resources.
+# Full training + evaluation on held-out 2025–26 games
 python game_model/run.py --holdouts 2026
 ```
 
-With **successful full training**, `game_model/checkpoints/game_models_2027.pt` will be created. A `SMOKE_NOT_FOR_PREDICTIONS.pt` file from `--smoke` is only a test artifact and **must not** be used as a forecast or published performance benchmark.
+The full run is compute-intensive. By default the original code selects CUDA, Apple Silicon MPS, or CPU according to availability; set `FOUNDATION_DEVICE=cpu` if needed. It prints training progress and, on successful full training, saves `game_model/checkpoints/game_models_2027.pt` and a held-out report in `game_model/output/`.
 
-Use the original model for a *hypothetical matchup* (after full training):
+**Do not use a smoke checkpoint as a prediction model.** The ZIP does **not** contain a fully trained checkpoint for the original three-layer architecture. The website does not automatically switch to that advanced model after training.
+
+Once the original model is fully trained, you can run a hypothetical matchup:
 
 ```bash
 python -m game_model.predict_matchup \
-  --home 'Dallas Mavericks' --away 'Boston Celtics' \
-  --date 2026-11-25 --as-of 2026-04-13 \
-  --output game_model/output/hypothetical_matchup.json
+  --home 'Dallas Mavericks' \
+  --away 'Boston Celtics' \
+  --date 2026-11-25 \
+  --as-of 2026-04-13
 ```
 
-This is a **what-if**, not a verified schedule, injury report, or future team roster. It uses most recently observed **2025–26** players to construct the lineup; the 2026–27 season data is not available in the uploaded files. For an actual matchup you would need confirmed schedules and active rosters from a properly licensed source.
+This is a **what-if scenario**, not an actual future schedule or verified roster forecast. The script draws on historical participants and cannot determine who will actually play. The default `--as-of` can be changed to a valid historical data cutoff.
 
-The original `game_model/run.py` script automatically skips rest-of-season projection when confirmed future schedules/rosters are absent. It never fabricates them.
+### 4. Run tests
 
-## Data origins and limitations
+```bash
+python -m unittest discover -s tests -p 'test_rebuild.py' -v
+python -m unittest discover -s tests -p 'test_transformer.py' -v
+```
 
-- Source is the user's CSV extracts from [`eoinamoore/historical-nba-data-and-player-box-scores`](https://www.kaggle.com/datasets/eoinamoore/historical-nba-data-and-player-box-scores). Determine the dataset's redistribution/license permissions before publishing it publicly.
-- Eight complete regular seasons, **2018–19 to 2025–26**; `200,030` player-game rows, `4,456` player-season rows, `6,820` player-position records (some historical positions unknown).
-- The original data input expected historical `starter` flags and **16 possession/play-by-play counts per player-game**. Neither is in these CSVs, so the bridge emits **zero placeholder values explicitly documented as missing**, while keeping the original model's input layer unchanged. Zero does **not** imply a real zero for possessions. A fully trained model would have to be retrained with this distribution.
-- Game statistics (FGM, FGA, 3PM, 3PA, FTM, FTA, OREB, DREB, AST, STL, BLK, turnovers and fouls) are real recorded box scores. Pairing by game ID gives the original model both teams rather than treating players independently.
-- No verified 2026–27 roster changes, future schedule, injuries, third-party market projections, preseason/college features, true starter flags, or position-specific fantasy eligibility are present.
-- Unused legacy possession simulators and data ingestion modules have been removed. The active comparison models and original advanced team-aware Transformer are preserved.
-- **No full Next.js production build has been verified** without installing npm dependencies; Python tests, model smoke training and inference checks have been run.
+The `tests/test_original_model_bridge.py` file also contains checks written for `pytest`:
 
-## Repository guide
+```bash
+python -m pip install pytest
+python -m pytest tests/test_original_model_bridge.py -q
+```
 
-- `web/`: Original application's interface and draft tools, plus history/game-log/model pages from the Kaggle rebuild.
-- `data/game_logs/`: Eight user-provided individual player-game CSVs.
-- `data/seasons/`: Eight user-provided season-average CSVs.
-- `data/player_positions_kaggle.csv`: User-provided broad G/F/C positions.
-- `app_data/build_app_data.py` + `app_data/enrich_game_data.py`: Regenerate website datasets from the user-provided CSVs and trained smaller model.
-- `game_model/export_data.py`: **New adapter to the original team's Transformer input contracts.**
-- `game_model/run.py`: **Original large model architecture**, with limited changes for data verification/smoke and no-schedule handling.
-- `game_model/predict_matchup.py`: Generates full multi-stat output from a *fully trained* original checkpoint for a hypothetical matchup.
-- `model/train_transformer.py`: Smaller previously trained and evaluated PyTorch Transformer for active draft estimates.
-- `model/train_game_logs.py`: Previously trained gradient-boosting comparison model.
-- `docs/DATA_PROVENANCE.md`: Source inventory and limitations for the local data pipeline.
+The project has passed Python regression and architecture smoke checks. A complete Next.js production build was not verified in the packaged release; use `cd web && npm run build` to check it in your environment.
 
-## Removal of legacy dependencies
+## League scoring
 
-This package contains no original provider-branded settings export, no old scrapers, no legacy simulation modules depending on unavailable external feeds, no comparison component for that provider, and no provider-specific placeholders in generated player data. The league scoring values and roster rules remain editable project settings. The full advanced network code is retained but needs full training before its forecasts are usable.
+The editable scoring system is in [`league/scoring-system.json`](league/scoring-system.json).
 
-## Ownership and licensing
+| Stat | Fantasy points | Stat | Fantasy points |
+| --- | ---: | --- | ---: |
+| Point (PTS) | +1 | Rebound (REB) | +1 |
+| Field goal made (FGM) | +2 | Assist (AST) | +2 |
+| Field goal attempted (FGA) | −1 | Steal (STL) | +4 |
+| Free throw made (FTM) | +1 | Block (BLK) | +4 |
+| Free throw attempted (FTA) | −1 | Turnover (TO) | −2 |
+| Three-pointer made (3PM) | +1 | | |
 
-Retaining original third-party source does not establish permission to redistribute it: the original ZIP did not include an explicit license. Before publishing or using this as an independent original software project, verify code authorship/license and dataset rights and credit other contributors appropriately.
+In practice:
+
+| Shot | Fantasy points |
+| --- | ---: |
+| Made three | **+5** |
+| Made two | **+3** |
+| Made free throw | **+1** |
+| Any missed field goal or free throw | **−1** |
+
+Shooting efficiency, steals, and blocks can make a substantial difference in this scoring system. The **original advanced model predicts a full stat line**, which is then converted to fantasy points using these weights. The **smaller trained model predicts fantasy points directly**, so changing scoring weights would require recalculating game targets and retraining that model.
+
+The bundled league configuration specifies **10 teams**, **10 starters + 3 bench + 1 IR**, a maximum of **4 centers**, **7 acquisitions per matchup week**, and **4 playoff teams** across two two-week rounds. The broad-position app lineup uses **3 G, 3 F, 1 C, and 3 UTIL** starters. A **February 19, 2027** trade deadline is recorded as an editable configuration value, **not verified against a live league**.
+
+## Principles
+
+The project follows these design choices and constraints:
+
+**Game-level, not possession-by-possession.** Both the player-sequence model and the original foundation model learn from whole-game box scores. The original advanced architecture still has slots for possession-based summary features, but the supplied CSVs do not include play-by-play events. Those slots are neutral-filled and must not be mistaken for observed zero possessions.
+
+**Player identity plus recent form.** The original foundation model combines learned player embeddings with a form encoder reading recent games. It then uses attention across both teams to account for teammates and opponents. The smaller shipped model instead learns from a player's previous 12 games and outputs next-game fantasy points directly.
+
+**Use past performances for predictive features.** The trained sequence model constructs inputs from games before the target game; it uses the 2024–25 season for validation and keeps 2025–26 aside for testing. The advanced model's historical game examples contain the actual players who appeared, so its historical evaluation is **conditional on participation** and is not proof that it can know future lineups.
+
+**Forecast statistical outcomes, not injuries.** The provided data has no confirmed future schedule, injuries, or active 2026–27 rosters. Predictions assume a player is available to participate; the app does not predict whether he will play.
+
+**Distinguish trained models from architecture.** The smaller Transformer and gradient booster have trained checkpoints and saved holdout results. The original advanced network has verified forward passes, a smoke-training test, and a data adapter, but it has **no validated full-training checkpoint in this release**.
+
+**Position labels are broad.** The player directory provides `G`, `F`, `C`, `G/F`, and `F/C`. These are not verified fantasy-site PG/SG/SF/PF eligibility; the mock draft uses compatible broad roster slots.
+
+**Keep the pipeline local and repeatable.** Player data comes from the bundled CSVs. The notebooks document extraction; the Python builders create reproducible JSON inputs and model files without fetching data from a sports API.
+
+## Results so far
+
+The **saved** benchmark files report next-game fantasy-point prediction errors for the 2025–26 holdout. Mean absolute error (MAE) is the average absolute difference, in fantasy points, between a prediction and the actual game result; lower is better.
+
+| Method | 2025–26 holdout MAE | Status |
+| --- | ---: | --- |
+| Last-10-game average baseline | **10.066** | Historical comparison |
+| Gradient-boosting regressor | **9.791** | Trained and evaluated |
+| 2-layer PyTorch player-sequence Transformer | **9.785** | Trained and evaluated; used by current app |
+| Original 3-layer, team-aware PyTorch foundation model | **Not measured** | Architecture retained; full fitting/evaluation outstanding |
+
+These results are drawn from `data/model/evaluation.json` and `data/model/transformer_evaluation.json`, which report **26,134** player-games in the 2025–26 test set. The smaller Transformer uses **2018–19 through 2023–24** for training, **2024–25** for validation, and **2025–26** for testing. Its reported RMSE is **12.623** fantasy points; the gradient-boosting model reports **12.500**. The 0.006-point MAE difference is negligible and does not demonstrate a meaningful advantage of one model over the other.
+
+The Transformer improves on the last-10 baseline by approximately **2.8% in MAE** on the recorded evaluation. These are saved project metrics, **not a claim that the advanced original architecture achieves the same accuracy**.
+
+## Current limitations
+
+- **No verified 2026–27 NBA schedule or rosters.** The streaming page explains the limitation rather than generating made-up future games. Season-long fantasy totals remain provisional without future game counts.
+- **No injuries, true starter flags, play-by-play events, preseason, or college rookie inputs.** The advanced architecture preserves relevant input dimensions, but missing source features are empty or neutral-filled, and the original rookie-trait pathway cannot be meaningfully trained from these CSVs alone.
+- **No verified PG/SG/SF/PF eligibility.** Only broad G/F/C player classifications are included.
+- **The original advanced Transformer is not yet production-trained.** Its smoke-training check verifies that the training loop works, not that its forecasts are accurate.
+- **The web app's `/api/user` route is not authenticated.** Add access control and user isolation before a public deployment.
+- **Code and dataset licensing need review.** The Kaggle source and the retained original application code may have separate reuse and redistribution conditions. A public GitHub repository or downloadable dataset is not automatically unrestricted.
+
+## Further reading
+
+- [`game_model/README.md`](game_model/README.md) — The preserved original team-aware Transformer, adapter, training, and what-if inference.
+- [`model/README.md`](model/README.md) — Trained smaller Transformer and gradient-boosting comparison models.
+- [`web/README.md`](web/README.md) — The app's routes, positions, and local-data behavior.
+- [`docs/DATA_PROVENANCE.md`](docs/DATA_PROVENANCE.md) — Dataset origins, available and missing fields, and licensing caution.
+- [`data/source_manifest.json`](data/source_manifest.json) — Coverage counts, model status, and exported source inventory.
+- [`data/model/transformer_evaluation.json`](data/model/transformer_evaluation.json) and [`data/model/evaluation.json`](data/model/evaluation.json) — Saved holdout measurements.
+- [`kaggle_extract/`](kaggle_extract/) — Original notebooks for extracting season averages, game-by-game statistics, and player positions.
